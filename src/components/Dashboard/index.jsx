@@ -27,6 +27,8 @@ import {
   Filter
 } from 'lucide-react';
 import { useToast } from '../../utils/ToastContext';
+import Modal from '../../utils/Modal';
+import AnalyticsPlaceholder from '../Analytics';
 
 const Dashboard = () => {
   const { showToast } = useToast();
@@ -36,6 +38,7 @@ const Dashboard = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [reportReady, setReportReady] = useState(false);
+  const [analyticsModalOpen, setAnalyticsModalOpen] = useState(false);
 
   // Dummy data for report generation
   const [selectedReport, setSelectedReport] = useState('portfolio-summary');
@@ -363,18 +366,19 @@ const Dashboard = () => {
         );
       case "analytics":
         return (
-          <div className="card card-hover animate-fade-in mt-6">
-            <div className="card-header flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-purple-600" />
-                <span className="font-semibold text-text-primary">View Analytics</span>
-              </div>
-              <button className="btn btn-ghost" onClick={() => setActiveAction(null)} aria-label="Close">
-                <XCircle className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="card-body">{analyticsPlaceholder}</div>
-          </div>
+          <>
+            <Modal
+              open={analyticsModalOpen}
+              onClose={() => { setAnalyticsModalOpen(false); setActiveAction(null); }}
+              title="Quick Analytics Overview"
+              actions={[
+                <button key="close" className="btn btn-secondary" onClick={() => { setAnalyticsModalOpen(false); setActiveAction(null); }}>Close</button>
+              ]}
+            >
+              <AnalyticsPlaceholder compact />
+            </Modal>
+            {!analyticsModalOpen && setTimeout(() => setAnalyticsModalOpen(true), 0)}
+          </>
         );
       case "validate":
         return (

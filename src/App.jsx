@@ -8,6 +8,7 @@ import Reports from './components/Reports';
 import Scheduling from './components/Scheduling';
 import Validation from './components/Validation';
 import Audit from './components/Audit';
+import AnalyticsPlaceholder from './components/Analytics';
 import './App.css';
 
 function App() {
@@ -30,6 +31,8 @@ function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />;
+      case 'analytics':
+        return <AnalyticsPlaceholder />;
       case 'reports':
         return <Reports />;
       case 'scheduling':

@@ -7,7 +7,8 @@ import {
   History,
   ChevronRight,
   Settings,
-  HelpCircle
+  HelpCircle,
+  BarChart3
 } from 'lucide-react';
 
 const Navigation = ({ activeTab, setActiveTab }) => {
@@ -17,6 +18,12 @@ const Navigation = ({ activeTab, setActiveTab }) => {
       label: 'Dashboard',
       icon: LayoutDashboard,
       description: 'Overview and analytics'
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: BarChart3,
+      description: 'Trends and visual insights'
     },
     {
       id: 'reports',
