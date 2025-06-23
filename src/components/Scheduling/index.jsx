@@ -1,90 +1,99 @@
-const schedules = [
-  {
-    title: "Monthly SASRA Prudential Reports",
-    details: [
-      "Auto-generates: 5th of each month at 06:00",
-      "Distribution: SASRA Portal, Board Chair, CFO",
-      "Next run: July 5, 2024",
-    ],
-    status: "Active",
-    lastRun: "Success",
-  },
-  {
-    title: "Quarterly Board Risk Reports",
-    details: [
-      "Auto-generates: Last Friday of quarter at 14:00",
-      "Distribution: All board members, Risk Committee",
-      "Next run: September 27, 2024",
-    ],
-    status: "Active",
-    lastRun: "Success",
-  },
-  {
-    title: "Weekly Management Dashboard",
-    details: [
-      "Auto-generates: Every Monday at 08:00",
-      "Distribution: Management team, Department heads",
-      "Next run: July 1, 2024",
-    ],
-    status: "Active",
-    lastRun: "Success",
-  },
-  {
-    title: "Annual Compliance Report",
-    details: [
-      "Auto-generates: January 15th at 10:00",
-      "Distribution: SASRA, Board, External Auditors",
-      "Next run: January 15, 2025",
-    ],
-    status: "Scheduled",
-    lastRun: "Never run",
-  },
+import React, { useState } from 'react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+import { useToast } from '../../utils/ToastContext';
+import Modal from '../../utils/Modal';
+
+const initialSchedules = [
+  { name: 'Monthly Portfolio', frequency: 'Monthly', next: '2024-07-01', recipients: 'Board, SASRA', status: 'Active' },
+  { name: 'Compliance Report', frequency: 'Quarterly', next: '2024-09-30', recipients: 'Compliance', status: 'Active' },
+  { name: 'Member Analysis', frequency: 'Yearly', next: '2025-01-10', recipients: 'Management', status: 'Paused' },
 ];
 
 const Scheduling = () => {
+  const { showToast } = useToast();
+  const [schedules, setSchedules] = useState(initialSchedules);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pendingIdx, setPendingIdx] = useState(null);
+
+  const requestToggle = (idx) => {
+    setPendingIdx(idx);
+    setModalOpen(true);
+  };
+
+  const confirmToggle = () => {
+    setSchedules(schedules => schedules.map((s, i) => {
+      if (i === pendingIdx) {
+        const newStatus = s.status === 'Active' ? 'Paused' : 'Active';
+        showToast(`Schedule "${s.name}" ${newStatus === 'Active' ? 'activated' : 'paused'}.`, { type: 'success' });
+        return { ...s, status: newStatus };
+      }
+      return s;
+    }));
+    setModalOpen(false);
+    setPendingIdx(null);
+  };
+
+  const cancelToggle = () => {
+    setModalOpen(false);
+    setPendingIdx(null);
+  };
+
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-2xl font-semibold text-blue-600 mb-4">Automated Report Scheduling</h2>
-      <p className="text-gray-600 mb-6">Automated generation and distribution to stakeholders.</p>
-
-      <div className="space-y-4 mb-6">
-        {schedules.map((schedule, index) => (
-          <div
-            key={index}
-            className="flex justify-between items-start border-l-4 bg-gray-50 p-4 rounded"
-            style={{
-              borderColor: schedule.status === "Active" ? "#27ae60" : "#f1c40f",
-            }}
-          >
-            <div>
-              <h4 className="text-lg font-semibold text-gray-800 mb-1">{schedule.title}</h4>
-              <ul className="text-sm text-gray-600 list-disc list-inside">
-                {schedule.details.map((line, i) => (
-                  <li key={i}>{line}</li>
+    <div className="space-y-6 animate-fade-in">
+      <Modal
+        open={modalOpen}
+        onClose={cancelToggle}
+        title={pendingIdx !== null ? (schedules[pendingIdx].status === 'Active' ? 'Pause Schedule?' : 'Activate Schedule?') : ''}
+        actions={[
+          <button key="cancel" className="btn btn-secondary" onClick={cancelToggle}>Cancel</button>,
+          <button key="confirm" className="btn btn-primary" onClick={confirmToggle} autoFocus>Confirm</button>
+        ]}
+      >
+        {pendingIdx !== null && (
+          <span>
+            Are you sure you want to {schedules[pendingIdx].status === 'Active' ? 'pause' : 'activate'} the schedule <b>{schedules[pendingIdx].name}</b>?
+          </span>
+        )}
+      </Modal>
+      <div className="card card-hover">
+        <div className="card-header">
+          <h2 className="text-lg font-semibold text-text-primary">Report Schedules</h2>
+        </div>
+        <div className="card-body">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-text-secondary">
+                  <th className="py-2 pr-4">Name</th>
+                  <th className="py-2 pr-4">Frequency</th>
+                  <th className="py-2 pr-4">Next Run</th>
+                  <th className="py-2 pr-4">Recipients</th>
+                  <th className="py-2">Status</th>
+                  <th className="py-2">Toggle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {schedules.map((s, idx) => (
+                  <tr key={idx} className="border-b border-secondary-200 dark:border-secondary-700">
+                    <td className="py-2 pr-4">{s.name}</td>
+                    <td className="py-2 pr-4">{s.frequency}</td>
+                    <td className="py-2 pr-4">{s.next}</td>
+                    <td className="py-2 pr-4">{s.recipients}</td>
+                    <td className="py-2">
+                      {s.status === 'Active' && <span className="inline-flex items-center gap-1 text-success-600"><CheckCircle className="w-4 h-4" /> Active</span>}
+                      {s.status === 'Paused' && <span className="inline-flex items-center gap-1 text-amber-600"><AlertCircle className="w-4 h-4" /> Paused</span>}
+                    </td>
+                    <td className="py-2">
+                      <button className="btn btn-secondary btn-sm" onClick={() => requestToggle(idx)}>
+                        {s.status === 'Active' ? 'Pause' : 'Activate'}
+                      </button>
+                    </td>
+                  </tr>
                 ))}
-              </ul>
-            </div>
-            <div className="text-right text-sm">
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                  schedule.status === "Active"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
-              >
-                {schedule.status}
-              </span>
-              <div className="mt-1 text-gray-500">Last run: {schedule.lastRun}</div>
-            </div>
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add New Schedule</button>
-        <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Edit Schedules</button>
-        <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">View Distribution Lists</button>
-        <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Test Run</button>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ThemeProvider } from './utils/ThemeContext';
+import { ToastProvider } from './utils/ToastContext';
 import Header from './components/Layout/Header';
 import Navigation from './components/Layout/Navigation';
 import Dashboard from './components/Dashboard';
@@ -31,22 +32,24 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-background text-text-primary transition-colors duration-300">
-        <div className="flex">
-          {/* Sidebar Navigation */}
-          <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-          
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col">
-            <Header />
-            <main className="flex-1 p-6 overflow-auto">
-              <div className="max-w-7xl mx-auto space-y-6">
-                {renderContent()}
-              </div>
-            </main>
+      <ToastProvider>
+        <div className="min-h-screen bg-background text-text-primary transition-colors duration-300">
+          <div className="flex">
+            {/* Sidebar Navigation */}
+            <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+            
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+              <Header />
+              <main className="flex-1 p-6 overflow-auto">
+                <div className="max-w-7xl mx-auto space-y-6">
+                  {renderContent()}
+                </div>
+              </main>
+            </div>
           </div>
         </div>
-      </div>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

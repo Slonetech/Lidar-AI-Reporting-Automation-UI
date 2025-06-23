@@ -15,35 +15,39 @@ import {
   Clock,
   Send,
   Settings,
-  Filter
+  Filter,
+  XCircle
 } from 'lucide-react';
+import { useToast } from '../../utils/ToastContext';
 
 const Reports = () => {
-  const [selectedReport, setSelectedReport] = useState('');
+  const { showToast } = useToast();
+  const [selectedReport, setSelectedReport] = useState('portfolio-summary');
   const [reportPeriod, setReportPeriod] = useState('monthly');
-  const [reportFormat, setReportFormat] = useState('pdf');
+  const [reportFormat, setReportFormat] = useState('csv');
   const [includeVisualizations, setIncludeVisualizations] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [reportReady, setReportReady] = useState(false);
 
   const reportTypes = [
     {
       id: 'portfolio-summary',
-      name: 'Portfolio Summary Report',
+      name: 'Portfolio Summary',
       description: 'Comprehensive overview of loan portfolio performance',
       icon: BarChart3,
       category: 'Portfolio'
     },
     {
       id: 'member-analysis',
-      name: 'Member Analysis Report',
+      name: 'Member Analysis',
       description: 'Detailed member demographics and behavior analysis',
       icon: Users,
       category: 'Members'
     },
     {
       id: 'financial-performance',
-      name: 'Financial Performance Report',
+      name: 'Financial Performance',
       description: 'Revenue, expenses, and profitability analysis',
       icon: DollarSign,
       category: 'Financial'
@@ -57,7 +61,7 @@ const Reports = () => {
     },
     {
       id: 'trend-analysis',
-      name: 'Trend Analysis Report',
+      name: 'Trend Analysis',
       description: 'Historical trends and forecasting',
       icon: TrendingUp,
       category: 'Analytics'
@@ -80,28 +84,46 @@ const Reports = () => {
   ];
 
   const formats = [
-    { value: 'pdf', label: 'PDF Document', icon: FileText },
-    { value: 'excel', label: 'Excel Spreadsheet', icon: BarChart3 },
-    { value: 'csv', label: 'CSV Data', icon: PieChart }
+    { value: 'csv', label: 'CSV', icon: FileText },
+    { value: 'pdf', label: 'PDF', icon: FileText },
+    { value: 'excel', label: 'Excel', icon: FileText },
   ];
 
-  const handleGenerateReport = async () => {
-    if (!selectedReport) return;
-    
+  const recentReports = [
+    { name: 'Portfolio Summary', date: '2024-01-15', status: 'completed' },
+    { name: 'Member Analysis', date: '2024-01-14', status: 'completed' },
+    { name: 'Compliance Report', date: '2024-01-13', status: 'completed' }
+  ];
+
+  const handleGenerateReport = () => {
     setIsGenerating(true);
     setProgress(0);
-    
-    // Simulate report generation
+    setReportReady(false);
     const interval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           setIsGenerating(false);
+          setReportReady(true);
+          showToast('Report generated successfully!', { type: 'success' });
           return 100;
         }
         return prev + 10;
       });
     }, 200);
+  };
+
+  const handleDownloadReport = () => {
+    const content = `Report: ${reportTypes.find(r => r.id === selectedReport)?.name}\nPeriod: ${periods.find(p => p.value === reportPeriod)?.label}\nFormat: ${reportFormat}\nVisualizations: ${includeVisualizations ? 'Yes' : 'No'}\nGenerated: ${new Date().toLocaleString()}`;
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${reportTypes.find(r => r.id === selectedReport)?.name || 'report'}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setReportReady(false);
+    showToast('Report downloaded', { type: 'success' });
   };
 
   return (
@@ -130,51 +152,16 @@ const Reports = () => {
               <h3 className="text-lg font-semibold text-text-primary">Select Report Type</h3>
             </div>
             <div className="card-body">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {reportTypes.map((report) => {
-                  const Icon = report.icon;
-                  const isSelected = selectedReport === report.id;
-                  
+              <div className="flex flex-wrap gap-2">
+                {reportTypes.map((r) => {
+                  const Icon = r.icon;
                   return (
                     <button
-                      key={report.id}
-                      onClick={() => setSelectedReport(report.id)}
-                      className={`p-4 rounded-lg border-2 transition-all duration-200 text-left ${
-                        isSelected
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                          : 'border-secondary-200 dark:border-secondary-700 hover:border-primary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800/50'
-                      }`}
+                      key={r.id}
+                      onClick={() => setSelectedReport(r.id)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${selectedReport === r.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100' : 'border-secondary-200 dark:border-secondary-700 text-text-secondary hover:border-primary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800/50'}`}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          isSelected 
-                            ? 'bg-primary-500 text-white' 
-                            : 'bg-secondary-100 dark:bg-secondary-800 text-secondary-600 dark:text-secondary-400'
-                        }`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className={`font-medium text-sm ${
-                              isSelected ? 'text-primary-900 dark:text-primary-100' : 'text-text-primary'
-                            }`}>
-                              {report.name}
-                            </h4>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              isSelected 
-                                ? 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200'
-                                : 'bg-secondary-100 text-secondary-600 dark:bg-secondary-800 dark:text-secondary-400'
-                            }`}>
-                              {report.category}
-                            </span>
-                          </div>
-                          <p className={`text-xs ${
-                            isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-text-secondary'
-                          }`}>
-                            {report.description}
-                          </p>
-                        </div>
-                      </div>
+                      <Icon className="w-4 h-4" /> {r.name}
                     </button>
                   );
                 })}
@@ -190,21 +177,15 @@ const Reports = () => {
             <div className="card-body space-y-6">
               {/* Period Selection */}
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-3">
-                  Report Period
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {periods.map((period) => (
+                <label className="block text-sm font-medium text-text-primary mb-2">Reporting Period</label>
+                <div className="flex flex-wrap gap-2">
+                  {periods.map((p) => (
                     <button
-                      key={period.value}
-                      onClick={() => setReportPeriod(period.value)}
-                      className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                        reportPeriod === period.value
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100'
-                          : 'border-secondary-200 dark:border-secondary-700 text-text-secondary hover:border-primary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800/50'
-                      }`}
+                      key={p.value}
+                      onClick={() => setReportPeriod(p.value)}
+                      className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${reportPeriod === p.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100' : 'border-secondary-200 dark:border-secondary-700 text-text-secondary hover:border-primary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800/50'}`}
                     >
-                      {period.label}
+                      {p.label}
                     </button>
                   ))}
                 </div>
@@ -212,54 +193,63 @@ const Reports = () => {
 
               {/* Format Selection */}
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-3">
-                  Output Format
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {formats.map((format) => {
-                    const Icon = format.icon;
-                    return (
-                      <button
-                        key={format.value}
-                        onClick={() => setReportFormat(format.value)}
-                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                          reportFormat === format.value
-                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                            : 'border-secondary-200 dark:border-secondary-700 hover:border-primary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800/50'
-                        }`}
-                      >
-                        <Icon className={`w-5 h-5 ${
-                          reportFormat === format.value 
-                            ? 'text-primary-600 dark:text-primary-400' 
-                            : 'text-secondary-500 dark:text-secondary-400'
-                        }`} />
-                        <span className={`font-medium ${
-                          reportFormat === format.value 
-                            ? 'text-primary-900 dark:text-primary-100' 
-                            : 'text-text-primary'
-                        }`}>
-                          {format.label}
-                        </span>
-                      </button>
-                    );
-                  })}
+                <label className="block text-sm font-medium text-text-primary mb-2">Output Format</label>
+                <div className="flex flex-wrap gap-2">
+                  {formats.map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setReportFormat(f.value)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${reportFormat === f.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100' : 'border-secondary-200 dark:border-secondary-700 text-text-secondary hover:border-primary-300 hover:bg-secondary-50 dark:hover:bg-secondary-800/50'}`}
+                    >
+                      <f.icon className="w-4 h-4" /> {f.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Options */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="visualizations"
-                    checked={includeVisualizations}
-                    onChange={(e) => setIncludeVisualizations(e.target.checked)}
-                    className="form-checkbox"
-                  />
-                  <label htmlFor="visualizations" className="text-sm text-text-primary">
-                    Include charts and visualizations
-                  </label>
-                </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="viz"
+                  checked={includeVisualizations}
+                  onChange={e => setIncludeVisualizations(e.target.checked)}
+                  className="form-checkbox"
+                />
+                <label htmlFor="viz" className="text-sm text-text-primary">Include Visualizations</label>
+              </div>
+
+              <div>
+                <button
+                  className="btn btn-primary w-full"
+                  onClick={handleGenerateReport}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="spinner w-4 h-4"></div> Generating Report...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4" /> Generate Report
+                    </>
+                  )}
+                </button>
+                {isGenerating && (
+                  <div className="mt-4">
+                    <div className="w-full bg-secondary-200 dark:bg-secondary-700 rounded-full h-2">
+                      <div className="bg-gradient-primary h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                    </div>
+                    <div className="text-xs text-text-secondary mt-2">{progress}% complete</div>
+                  </div>
+                )}
+                {reportReady && !isGenerating && (
+                  <div className="mt-4 flex flex-col items-center gap-2">
+                    <CheckCircle className="w-6 h-6 text-success-600" />
+                    <div className="text-sm text-success-700">Report ready!</div>
+                    <button className="btn btn-success" onClick={handleDownloadReport}><Download className="w-4 h-4" /> Download Report</button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -288,24 +278,6 @@ const Reports = () => {
                       <div>Visualizations: {includeVisualizations ? 'Included' : 'Excluded'}</div>
                     </div>
                   </div>
-                  
-                  <button
-                    onClick={handleGenerateReport}
-                    disabled={isGenerating}
-                    className="btn btn-primary w-full"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <div className="spinner w-4 h-4"></div>
-                        Generating Report...
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="w-4 h-4" />
-                        Generate Report
-                      </>
-                    )}
-                  </button>
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -316,25 +288,6 @@ const Reports = () => {
             </div>
           </div>
 
-          {/* Progress Bar */}
-          {isGenerating && (
-            <div className="card card-hover">
-              <div className="card-body">
-                <div className="flex items-center gap-2 mb-3">
-                  <Clock className="w-4 h-4 text-primary-600" />
-                  <span className="text-sm font-medium text-text-primary">Generating Report</span>
-                </div>
-                <div className="w-full bg-secondary-200 dark:bg-secondary-700 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-primary h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-text-secondary mt-2">{progress}% complete</div>
-              </div>
-            </div>
-          )}
-
           {/* Recent Reports */}
           <div className="card card-hover">
             <div className="card-header">
@@ -342,11 +295,7 @@ const Reports = () => {
             </div>
             <div className="card-body">
               <div className="space-y-3">
-                {[
-                  { name: 'Portfolio Summary', date: '2024-01-15', status: 'completed' },
-                  { name: 'Member Analysis', date: '2024-01-14', status: 'completed' },
-                  { name: 'Compliance Report', date: '2024-01-13', status: 'completed' }
-                ].map((report, index) => (
+                {recentReports.map((report, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-secondary-50 dark:bg-secondary-800/50 rounded-lg">
                     <div>
                       <div className="text-sm font-medium text-text-primary">{report.name}</div>

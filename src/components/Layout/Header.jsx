@@ -39,7 +39,7 @@ const Header = () => {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-gradient-primary">
-                  SASRA Reporting
+                  LIDAR Reporting
                 </h1>
                 <p className="text-xs text-secondary-600 dark:text-secondary-400">
                   Automation System
