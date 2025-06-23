@@ -35,11 +35,11 @@ const Header = () => {
             
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
+                <span className="text-white font-bold text-sm">LR</span>
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-gradient-primary">
-                  SASRA Reporting
+                  LIDAR Reporting
                 </h1>
                 <p className="text-xs text-secondary-600 dark:text-secondary-400">
                   Automation System
